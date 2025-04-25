@@ -17,27 +17,33 @@ use tokio::{
     time::{interval, sleep}
 };
 
-const SERVICE_UUID: &str = "123e4567-e89b-12d3-a456-426614174000";
+//const SERVICE_UUID: &str = "123e4567-e89b-12d3-a456-426614174000";
 
+// Need to perform "rfkill unlock" for proper work
 #[tokio::main]
 async fn main() -> bluer::Result<()> {
     let session = bluer::Session::new().await?;
     let adapter = session.default_adapter().await?;
+    println!("Pairable: {:?}", adapter.is_pairable().await?);
     adapter.set_powered(true).await?;
 
+    println!("Advertising on Bluetooth adapter {} with address {}", adapter.name(), adapter.address().await?);
     let le_advertisement = Advertisement  {
         advertisement_type: bluer::adv::Type::Peripheral,
-        service_uuids: vec![SERVICE_UUID.parse().unwrap()].into_iter().collect(),
+        service_uuids: vec!["55174dae-1f5b-4943-82d1-a933cf19305e".parse().unwrap()].into_iter().collect(),
         discoverable: Some(true),
         local_name: Some("Remote RC BT".to_string()),
         ..Default::default()
     };
 
     let adv_handle = adapter.advertise(le_advertisement).await?;
+    
+    println!("Pairable: {:?}", adapter.is_pairable().await?);
+
     let (char_control, char_handle) = characteristic_control();
     let app = Application {
         services: vec![Service {
-            uuid: Uuid::parse_str(SERVICE_UUID).unwrap(),
+            uuid: Uuid::parse_str("55174dae-1f5b-4943-82d1-a933cf19305e").unwrap(),
             primary: true,
             characteristics: vec![Characteristic {
                 uuid: Uuid::parse_str("2b022587-f2bc-4563-bd7a-0099940c533a").unwrap(),
@@ -91,10 +97,8 @@ async fn main() -> bluer::Result<()> {
                 }
             }
             _ = interval.tick() => {
-                println!("Decrementing each element by one");
-                for v in &mut *value {
-                    *v = v.saturating_sub(1);
-                }
+                println!("Sending dummy command");
+                value = vec![0x01, 0x00, 0x00, 0x00];
                 println!("Value is {:x?}", &value);
                 if let Some(writer) = writer_opt.as_mut() {
                     println!("Notifying with value {:x?}", &value);
@@ -129,6 +133,12 @@ async fn main() -> bluer::Result<()> {
     }
 
     drop(app_handle);
+    // println!("Press enter to quit");
+    // let stdin = BufReader::new(tokio::io::stdin());
+    // let mut lines = stdin.lines();
+    // let _ = lines.next_line().await;
+
+    println!("Removing advertisement");
     drop(adv_handle);
 
     Ok(())

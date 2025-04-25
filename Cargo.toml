@@ -1,5 +1,5 @@
 [package]
-name = "files"
+name = "remote-rc-bluetooth-server"
 version = "0.1.0"
 edition = "2021"
 
