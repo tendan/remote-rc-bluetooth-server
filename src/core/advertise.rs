@@ -3,7 +3,7 @@ use bluer::{
     Uuid
 };
 
-use config::uuid::SERVICE_UUID;
+use crate::config::uuid::SERVICE_UUID;
 
 pub fn create_advertisement() -> Advertisement {
     Advertisement  {

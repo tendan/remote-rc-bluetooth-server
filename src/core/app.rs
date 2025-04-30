@@ -1,7 +1,7 @@
 use bluer::{
     gatt::local::{
         Application, Characteristic, CharacteristicControlHandle,
-        CharacteristicNotify, CharacteristicNotifyMethod, CharacteristicWrite,
+        CharacteristicNotify, CharacteristicNotifyMethod, CharacteristicWrite, CharacteristicWriteMethod,
         Service
     }, 
     Uuid
@@ -12,7 +12,11 @@ use crate::config::uuid::{
     SERVICE_UUID
 };
 
-pub fn prepare_application(control_handle: &CharacteristicControlHandle) -> Application {
+// TODO: Refactor it into macro
+pub fn prepare_application(
+    dummy_control_handle: CharacteristicControlHandle,
+    control_system_control_handle: CharacteristicControlHandle
+) -> Application {
     let characteristics: Vec<Characteristic> = vec![
         Characteristic {
             uuid: Uuid::parse_str(REQUEST_RESPONSE_CHARACTERISTIC_UUID).unwrap(),
@@ -26,7 +30,7 @@ pub fn prepare_application(control_handle: &CharacteristicControlHandle) -> Appl
                 method: CharacteristicNotifyMethod::Io,
                 ..Default::default()
             }),
-            control_handle,
+            control_handle: dummy_control_handle,
             ..Default::default()
         },
         Characteristic {
@@ -42,6 +46,7 @@ pub fn prepare_application(control_handle: &CharacteristicControlHandle) -> Appl
                 method: CharacteristicNotifyMethod::Io,
                 ..Default::default()
             }),
+            control_handle: control_system_control_handle,
             ..Default::default()
         }
     ];

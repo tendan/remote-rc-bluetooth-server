@@ -1,7 +1,5 @@
-use bluer::gatt::{ 
-    local::CharacteristicControlEvent,
-    CharacteristicWriter
-};
+use bluer::gatt::CharacteristicWriter;
+use tokio::io::AsyncWriteExt;
 
 pub async fn send_dummy_command(writer_opt: &mut Option<CharacteristicWriter>) {
     println!("Sending dummy command");

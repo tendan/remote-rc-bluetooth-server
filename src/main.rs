@@ -1,23 +1,9 @@
 mod config;
 mod core;
-use core::{advertise::create_advertisement, app::prepare_application, commands::send_dummy_command, handlers::event_loop};
-use std::time::Duration;
-use bluer::{
-    adv::Advertisement,
-    gatt::{
-        local::{
-            characteristic_control, Application, Characteristic, CharacteristicControlEvent,
-            CharacteristicNotify, CharacteristicNotifyMethod, CharacteristicWrite, CharacteristicWriteMethod,
-            Service,
-        },
-        CharacteristicReader, CharacteristicWriter,
-    }, Uuid,
-};
-use futures::{future, pin_mut, StreamExt};
-use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
-    time::{interval, sleep}
-};
+use core::{advertise::create_advertisement, app::prepare_application, handlers::event_loop};
+//use futures::pin_mut;
+use bluer::gatt::local::characteristic_control;
+
 
 // Need to perform "rfkill unlock" for proper work
 #[tokio::main]
@@ -34,14 +20,17 @@ async fn main() -> bluer::Result<()> {
     
     println!("Pairable: {:?}", adapter.is_pairable().await?);
 
-    let (char_control, char_handle) = characteristic_control();
-    let app = prepare_application(&char_handle);
+    let (mut dummy_char_control, dummy_char_handle) = characteristic_control();
+    let (mut controls_char_control, controls_char_handle) = characteristic_control();
+    //pin_mut!(dummy_char_control);
+    //pin_mut!(controls_char_control);
+    let app = prepare_application(dummy_char_handle, controls_char_handle);
 
     let app_handle = adapter.serve_gatt_application(app).await?;
 
     println!("Echo service ready. Press enter to quit.");
 
-    event_loop(&char_control);
+    event_loop(&mut dummy_char_control, &mut controls_char_control).await?;
 
     drop(app_handle);
 
