@@ -1,6 +1,6 @@
 mod config;
 mod core;
-use core::{advertise::create_advertisement, app::prepare_application, handlers::event_loop};
+use core::{advertise::create_advertisement, app::prepare_application};
 //use futures::pin_mut;
 use bluer::gatt::local::characteristic_control;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -21,8 +21,8 @@ async fn main() -> bluer::Result<()> {
     
     //println!("Pairable: {:?}", adapter.is_pairable().await?);
 
-    let (mut dummy_char_control, dummy_char_handle) = characteristic_control();
-    let (mut controls_char_control, controls_char_handle) = characteristic_control();
+    let (/* mut dummy_char_control */_, dummy_char_handle) = characteristic_control();
+    let (/* mut controls_char_control */_, controls_char_handle) = characteristic_control();
     //pin_mut!(dummy_char_control);
     //pin_mut!(controls_char_control);
     let app = prepare_application(dummy_char_handle, controls_char_handle);

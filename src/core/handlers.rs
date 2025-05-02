@@ -7,8 +7,7 @@ use bluer::gatt::{
 use std::time::Duration;
 use futures::{future, StreamExt};
 use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt, BufReader},
-    time::interval
+    io::{AsyncBufReadExt, AsyncReadExt, BufReader}, sync::Mutex, time::interval
 };
 // use crate::core::commands::send_dummy_command;
 
@@ -69,3 +68,24 @@ use tokio::{
 //         None => future::pending().await,
 //     }
 // }
+
+pub fn parse_command(command: &Vec<u8>) -> bluer::Result<()> {
+    match command[..] {
+        [0x01, _, _, b] => {
+            // this will be removed when proper method will exist
+            match b {
+                0 => println!("Accelerator off"),
+                1 => println!("Accelerator on"),
+                2 => println!("Brake on"),
+                3 => println!("Brake off"),
+                _ => println!("Unknown command")
+            }
+            Ok(())
+        },
+        [0x03, _, _, b] => {
+            println!("Thumb position: {:x?}", b);
+            Ok(())
+        }
+        _ => Ok(())
+    }
+}
