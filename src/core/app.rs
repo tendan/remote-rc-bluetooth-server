@@ -19,6 +19,7 @@ use crate::config::uuid::{
     CONTROL_SYSTEM_CHARACTERISTIC_UUID,
     SERVICE_UUID
 };
+use super::commands::receive_dummy_command;
 
 // TODO: Refactor it into macro
 pub fn prepare_application(
@@ -53,16 +54,7 @@ pub fn prepare_application(
             // Reading response from client
             write: Some(CharacteristicWrite {
                 write_without_response: true,
-                method: CharacteristicWriteMethod::Fun(Box::new(move |new_value, req| {
-                    let value = dummy_value_write.clone();
-                    async move {
-                        println!("Dummy write request {:?} with value {:x?}", &req, &new_value);
-                        let mut value = value.lock().await;
-                        *value = new_value;
-                        Ok(())
-                    }
-                    .boxed()
-                })),
+                method: CharacteristicWriteMethod::Fun(receive_dummy_command(dummy_value_write)),
                 ..Default::default()
             }),
             control_handle: dummy_control_handle,
