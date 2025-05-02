@@ -1,19 +1,19 @@
 use std::sync::Arc;
-use bluer::gatt::{local::CharacteristicWriteFun, CharacteristicWriter};
+use bluer::gatt::local::{CharacteristicWriteFun, CharacteristicReadFun};
 use futures::FutureExt;
-use tokio::{io::AsyncWriteExt, sync::Mutex};
+use tokio::sync::Mutex;
 
-pub async fn send_dummy_command(writer_opt: &mut Option<CharacteristicWriter>) {
-    println!("Sending dummy command");
-    let value = vec![0x01, 0x00, 0x00, 0x00];
-    println!("Value is {:x?}", &value);
-    if let Some(writer) = writer_opt.as_mut() {
-        println!("Notifying with value {:x?}", &value);
-        if let Err(err) = writer.write(&value).await {
-            println!("Notification stream error: {}", &err);
-            *writer_opt = None;
+
+pub fn send_dummy_command(previous_value: Arc<Mutex<Vec<u8>>>) -> CharacteristicReadFun {
+    Box::new(move |req| {
+        let value = previous_value.clone();
+        async move {
+            let value = value.lock().await.clone();
+            println!("Dummy read request {:?}: {:x?}", &req, &value);
+            Ok(value)
         }
-    }
+        .boxed()
+    })
 }
 
 pub fn receive_dummy_command(previous_value: Arc<Mutex<Vec<u8>>>) -> CharacteristicWriteFun {

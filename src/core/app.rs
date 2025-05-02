@@ -10,7 +10,6 @@ use bluer::{
 use std::{sync::Arc, time::Duration};
 use futures::FutureExt;
 use tokio::{
-    io::{AsyncBufReadExt, BufReader},
     sync::Mutex,
     time::sleep,
 };
@@ -19,7 +18,7 @@ use crate::config::uuid::{
     CONTROL_SYSTEM_CHARACTERISTIC_UUID,
     SERVICE_UUID
 };
-use super::commands::receive_dummy_command;
+use super::commands::{receive_dummy_command, send_dummy_command};
 
 // TODO: Refactor it into macro
 pub fn prepare_application(
@@ -40,15 +39,7 @@ pub fn prepare_application(
             // Sending request to client about connection status
             read: Some(CharacteristicRead {
                 read: true,
-                fun: Box::new(move |req| {
-                    let value = dummy_value_read.clone();
-                    async move {
-                        let value = value.lock().await.clone();
-                        println!("Dummy read request {:?} with value {:x?}", &req, &value);
-                        Ok(value)
-                    }
-                    .boxed()
-                }),
+                fun: send_dummy_command(dummy_value_read),
                 ..Default::default()
             }),
             // Reading response from client
