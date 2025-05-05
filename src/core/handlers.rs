@@ -4,11 +4,13 @@ use bluer::gatt::{
         },
         CharacteristicReader, CharacteristicWriter
     };
-use std::time::Duration;
+use std::{sync::{atomic::AtomicBool, Arc}, time::Duration};
 use futures::{future, StreamExt};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, BufReader}, sync::Mutex, time::interval
 };
+
+use super::hardware::stop_acceleration;
 // use crate::core::commands::send_dummy_command;
 
 // pub async fn event_loop(
@@ -88,4 +90,8 @@ pub fn parse_command(command: &Vec<u8>) -> bluer::Result<()> {
         }
         _ => Ok(())
     }
+}
+
+pub fn on_disconnect(current_acc: Arc<AtomicBool>) {
+    stop_acceleration(current_acc);
 }
