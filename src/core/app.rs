@@ -25,10 +25,11 @@ pub fn prepare_application(
     dummy_control_handle: CharacteristicControlHandle,
     control_system_control_handle: CharacteristicControlHandle
 ) -> Application {
-    let value = Arc::new(Mutex::new(vec![0x10, 0x01, 0x01, 0x10]));
+    let value = Arc::new(Mutex::new(vec![0x10, 0x00, 0x00, 0x00]));
     
-    let dummy_value_read = value.clone();
-    let dummy_value_write = value.clone();
+    //let dummy_value_read = value.clone();
+    //let dummy_value_write = value.clone();
+    let dummy_value = value.clone();
 
     let control_value_write = value.clone();
     let control_value_notify = value.clone();
@@ -37,39 +38,19 @@ pub fn prepare_application(
         Characteristic {
             uuid: Uuid::parse_str(REQUEST_RESPONSE_CHARACTERISTIC_UUID).unwrap(),
             // Sending request to client about connection status
-            read: Some(CharacteristicRead {
-                read: true,
-                fun: send_dummy_command(dummy_value_read),
-                ..Default::default()
-            }),
-            // Reading response from client
-            write: Some(CharacteristicWrite {
-                write_without_response: true,
-                method: CharacteristicWriteMethod::Fun(receive_dummy_command(dummy_value_write)),
-                ..Default::default()
-            }),
-            control_handle: dummy_control_handle,
-            ..Default::default()
-        },
-        Characteristic {
-            uuid: Uuid::parse_str(CONTROL_SYSTEM_CHARACTERISTIC_UUID).unwrap(),
-            // Reading response from client
-            write: Some(CharacteristicWrite {
-                write_without_response: true,
-                method: CharacteristicWriteMethod::Fun(control_command(control_value_write)),
-                ..Default::default()
-            }),
             // Notify client about connection status
             notify: Some(CharacteristicNotify {
-                notify: true,
+                indicate: true,
+                notify: false,
                 method: CharacteristicNotifyMethod::Fun(Box::new(move |mut notifier| {
                     let value = control_value_notify.clone();
                     async move {
                         tokio::spawn(async move {
-                            println!(
-                                "Control system's notification session start with confirming={:?}",
-                                notifier.confirming()
-                            );
+                            if notifier.confirming() {
+                                println!("Control system's indicate session start");
+                            } else {
+                                println!("Control system's notification session start");
+                            }
                             loop {
                                 {
                                     let mut value = value.lock().await;
@@ -92,6 +73,28 @@ pub fn prepare_application(
                 })),
                 ..Default::default()
             }),
+            // Reading response from client
+            write: Some(CharacteristicWrite {
+                write_without_response: true,
+                method: CharacteristicWriteMethod::Fun(receive_dummy_command(dummy_value.clone())),
+                ..Default::default()
+            }),
+            control_handle: dummy_control_handle,
+            ..Default::default()
+        },
+        Characteristic {
+            uuid: Uuid::parse_str(CONTROL_SYSTEM_CHARACTERISTIC_UUID).unwrap(),
+            // Reading response from client
+            write: Some(CharacteristicWrite {
+                write_without_response: true,
+                method: CharacteristicWriteMethod::Fun(control_command(control_value_write)),
+                ..Default::default()
+            }),
+            // read: Some(CharacteristicRead {
+            //     read: true,
+            //     fun: send_dummy_command(dummy_value.clone()),
+            //     ..Default::default()
+            // }),
             control_handle: control_system_control_handle,
             ..Default::default()
         }
