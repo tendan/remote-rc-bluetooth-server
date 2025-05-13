@@ -1,5 +1,5 @@
 use std::{error::Error, sync::{atomic::{AtomicBool, Ordering}, Arc}, time::Duration};
-
+use log::{info};
 use rppal::{gpio::Gpio, pwm::{Channel, Polarity, Pwm}};
 
 // BCM pin numbering is used
@@ -26,35 +26,42 @@ const PULSE_MAX_US: u64 = 1800;
 
 //     Ok(())
 // }
-pub fn accelerate(current_acc_state: Arc<AtomicBool>) -> Result<(), Box<dyn Error>> {
-    let mut accelerator_pin = Gpio::new()?.get(ACCELERATOR_GPIO)?.into_output();
 
-    current_acc_state.clone().store(true, Ordering::SeqCst);
+// Each function currently panics if something goes wrong with hardware
+
+pub fn accelerate(/* current_acc_state: Arc<AtomicBool> */) /* -> Result<(), Box<dyn Error>> */ {
+    let mut accelerator_pin = Gpio::new().unwrap()
+            .get(ACCELERATOR_GPIO).unwrap().into_output();
+    info!("Accelerating");
+    //current_acc_state.clone().store(true, Ordering::SeqCst);
     accelerator_pin.set_high();
 
-    Ok(())
+    //Ok(())
 }
 
-pub fn stop_acceleration(current_acc_state: Arc<AtomicBool>) -> Result<(), Box<dyn Error>> {
-    let mut accelerator_pin = Gpio::new()?.get(ACCELERATOR_GPIO)?.into_output();
-    current_acc_state.clone().store(false, Ordering::SeqCst);
+pub fn stop_acceleration(/* current_acc_state: Arc<AtomicBool> */) /* -> Result<(), Box<dyn Error>> */ {
+    let mut accelerator_pin = Gpio::new().unwrap()
+            .get(ACCELERATOR_GPIO).unwrap().into_output();
+    //current_acc_state.clone().store(false, Ordering::SeqCst);
+    info!("Stopping the vehicle");
     accelerator_pin.set_low();
 
-    Ok(())
+    //Ok(())
 }
 
-pub fn steer(degrees: u64) -> Result<(), Box<dyn Error>> {
+pub fn steer(degrees: u64) /* -> Result<(), Box<dyn Error>> */ {
     let mut servo_pin = Pwm::with_period(
         Channel::Pwm0, 
         Duration::from_millis(PERIOD_MS), 
         Duration::from_micros(PULSE_MAX_US), 
         Polarity::Normal, 
         true
-    )?;
+    ).unwrap();
     let max_degree: u64 = 180;
     let pulse = degrees * ((PULSE_MAX_US - PULSE_MIN_US) / max_degree) + PULSE_MIN_US;
     
-    servo_pin.set_pulse_width(Duration::from_micros(pulse))?;
+    info!("Set servo to {} degrees", degrees);
+    servo_pin.set_pulse_width(Duration::from_micros(pulse)).unwrap();
 
-    Ok(())
+    //Ok(())
 }

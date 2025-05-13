@@ -9,8 +9,10 @@ use futures::{future, StreamExt};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, BufReader}, sync::Mutex, time::interval
 };
+use core::error::Error;
+use log::{error, info};
 
-use super::hardware::stop_acceleration;
+use super::hardware::{accelerate, stop_acceleration};
 // use crate::core::commands::send_dummy_command;
 
 // pub async fn event_loop(
@@ -71,27 +73,32 @@ use super::hardware::stop_acceleration;
 //     }
 // }
 
-pub fn parse_command(command: &Vec<u8>) -> bluer::Result<()> {
+pub fn parse_command(command: &Vec<u8>/* , current_acc: Arc<AtomicBool> */) -> bluer::Result<()> {
     match command[..] {
         [0x01, _, _, b] => {
             // this will be removed when proper method will exist
-            match b {
-                0 => println!("Accelerator off"),
-                1 => println!("Accelerator on"),
-                2 => println!("Brake on"),
-                3 => println!("Brake off"),
-                _ => println!("Unknown command")
-            }
+            control_handle(b);
             Ok(())
         },
         [0x03, _, _, b] => {
-            println!("Thumb position: {:x?}", b);
+            //println!("Thumb position: {:x?}", b);
             Ok(())
         }
         _ => Ok(())
     }
 }
 
-pub fn on_disconnect(current_acc: Arc<AtomicBool>) {
-    stop_acceleration(current_acc);
+fn control_handle(id: u8) {
+    match id {
+        0 => stop_acceleration(),
+        1 => accelerate(),
+        2 => error!("TODO: Brake on"),
+        3 => error!("TODO: Brake off"),
+        _ => println!("Unknown command")
+    }
+}
+
+pub fn on_disconnect(/* current_acc: Arc<AtomicBool> */) {
+    info!("Stopping vehicle due to disconnection");
+    stop_acceleration(/* current_acc.clone() */);
 }

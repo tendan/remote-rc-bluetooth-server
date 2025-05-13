@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{atomic::AtomicBool, Arc};
 use bluer::gatt::local::{CharacteristicWriteFun, CharacteristicReadFun};
 use futures::FutureExt;
 use tokio::sync::Mutex;
@@ -31,12 +31,13 @@ pub fn receive_dummy_command(previous_value: Arc<Mutex<Vec<u8>>>) -> Characteris
     })
 }
 
-pub fn control_command(previous_value: Arc<Mutex<Vec<u8>>>) -> CharacteristicWriteFun {
+pub fn control_command(previous_value: Arc<Mutex<Vec<u8>>>/* , current_acc_state: Arc<AtomicBool> */) -> CharacteristicWriteFun {
     Box::new(move |new_value, req| {
         let value = previous_value.clone();
+        //let current_acc = current_acc_state.clone();
         async move {
-            println!("Control system's write request {:?}", &req);
-            let _ = parse_command(&new_value);
+            //println!("Control system's write request {:?}", &req);
+            let _ = parse_command(&new_value/* , current_acc */);
             let mut value = value.lock().await;
             *value = new_value;
             Ok(())

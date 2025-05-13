@@ -7,7 +7,8 @@ use bluer::{
     }, 
     Uuid
 };
-use std::{sync::Arc, time::Duration};
+use log::{info, warn};
+use std::{sync::{atomic::{AtomicBool, Ordering}, Arc}, time::Duration};
 use futures::FutureExt;
 use tokio::{
     sync::Mutex,
@@ -18,7 +19,7 @@ use crate::config::uuid::{
     CONTROL_SYSTEM_CHARACTERISTIC_UUID,
     SERVICE_UUID
 };
-use super::commands::{control_command, receive_dummy_command, send_dummy_command};
+use super::{commands::{control_command, receive_dummy_command, send_dummy_command}, handlers::on_disconnect};
 
 // TODO: Refactor it into macro
 pub fn prepare_application(
@@ -26,6 +27,7 @@ pub fn prepare_application(
     control_system_control_handle: CharacteristicControlHandle
 ) -> Application {
     let value = Arc::new(Mutex::new(vec![0x10, 0x00, 0x00, 0x00]));
+    //let current_acc_state: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
     
     //let dummy_value_read = value.clone();
     //let dummy_value_write = value.clone();
@@ -44,18 +46,21 @@ pub fn prepare_application(
                 notify: false,
                 method: CharacteristicNotifyMethod::Fun(Box::new(move |mut notifier| {
                     let value = control_value_notify.clone();
+                    //let current_acc = current_acc_state.clone();
                     async move {
                         tokio::spawn(async move {
                             if notifier.confirming() {
-                                println!("Control system's indicate session start");
+                                info!("Control system's indicate session start");
                             } else {
-                                println!("Control system's notification session start");
+                                warn!("Control system's notification session start");
                             }
                             loop {
                                 {
                                     let mut value = value.lock().await;
                                     println!("Notifying with value {:x?}", &*value);
                                     if let Err(err) = notifier.notify(value.to_vec()).await {
+                                        // Potential disconnection handler
+                                        on_disconnect(/* current_acc */);
                                         println!("Notification error: {}", &err);
                                         break;
                                     }
@@ -73,12 +78,12 @@ pub fn prepare_application(
                 })),
                 ..Default::default()
             }),
-            // Reading response from client
-            write: Some(CharacteristicWrite {
-                write_without_response: true,
-                method: CharacteristicWriteMethod::Fun(receive_dummy_command(dummy_value.clone())),
-                ..Default::default()
-            }),
+            // // Reading response from client
+            // write: Some(CharacteristicWrite {
+            //     write_without_response: true,
+            //     method: CharacteristicWriteMethod::Fun(receive_dummy_command(dummy_value.clone())),
+            //     ..Default::default()
+            // }),
             control_handle: dummy_control_handle,
             ..Default::default()
         },
@@ -87,7 +92,7 @@ pub fn prepare_application(
             // Reading response from client
             write: Some(CharacteristicWrite {
                 write_without_response: true,
-                method: CharacteristicWriteMethod::Fun(control_command(control_value_write)),
+                method: CharacteristicWriteMethod::Fun(control_command(control_value_write/* , current_acc_state.clone() */)),
                 ..Default::default()
             }),
             // read: Some(CharacteristicRead {
