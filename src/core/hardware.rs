@@ -49,7 +49,7 @@ pub fn stop_acceleration(/* current_acc_state: Arc<AtomicBool> */) /* -> Result<
     //Ok(())
 }
 
-pub fn steer(degrees: u64) /* -> Result<(), Box<dyn Error>> */ {
+pub fn steer(degrees: u8) /* -> Result<(), Box<dyn Error>> */ {
     let mut servo_pin = Pwm::with_period(
         Channel::Pwm0, 
         Duration::from_millis(PERIOD_MS), 
@@ -58,7 +58,7 @@ pub fn steer(degrees: u64) /* -> Result<(), Box<dyn Error>> */ {
         true
     ).unwrap();
     let max_degree: u64 = 180;
-    let pulse = degrees * ((PULSE_MAX_US - PULSE_MIN_US) / max_degree) + PULSE_MIN_US;
+    let pulse = (degrees as u64) * ((PULSE_MAX_US - PULSE_MIN_US) / max_degree) + PULSE_MIN_US;
     
     info!("Set servo to {} degrees", degrees);
     servo_pin.set_pulse_width(Duration::from_micros(pulse)).unwrap();

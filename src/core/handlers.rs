@@ -12,7 +12,7 @@ use tokio::{
 use core::error::Error;
 use log::{error, info};
 
-use super::hardware::{accelerate, stop_acceleration};
+use super::hardware::{accelerate, stop_acceleration, steer};
 // use crate::core::commands::send_dummy_command;
 
 // pub async fn event_loop(
@@ -75,20 +75,25 @@ use super::hardware::{accelerate, stop_acceleration};
 
 pub fn parse_command(command: &Vec<u8>/* , current_acc: Arc<AtomicBool> */) -> bluer::Result<()> {
     match command[..] {
-        [0x01, _, _, b] => {
+        [0x01, _, 0x00, b] => {
             // this will be removed when proper method will exist
-            control_handle(b);
+            accel_handle(b);
             Ok(())
         },
-        [0x03, _, _, b] => {
-            //println!("Thumb position: {:x?}", b);
+        [0x01, _, 0x01, d] => {
+            // this will be removed when proper method will exist
+            steering_handle(d);
             Ok(())
-        }
+        },
+        // [0x03, _, _, b] => {
+        //     //println!("Thumb position: {:x?}", b);
+        //     Ok(())
+        // }
         _ => Ok(())
     }
 }
 
-fn control_handle(id: u8) {
+fn accel_handle(id: u8) {
     match id {
         0 => stop_acceleration(),
         1 => accelerate(),
@@ -96,6 +101,14 @@ fn control_handle(id: u8) {
         3 => error!("TODO: Brake off"),
         _ => println!("Unknown command")
     }
+}
+
+fn steering_handle(degrees: u8) {
+    if degrees > 180 {
+        error!("Invalid degree value");
+        return
+    }
+    steer(degrees);
 }
 
 pub fn on_disconnect(/* current_acc: Arc<AtomicBool> */) {
