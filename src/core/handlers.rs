@@ -87,10 +87,6 @@ pub fn parse_command(command: &Vec<u8>/* , current_acc: Arc<AtomicBool> */) -> b
             steering_handle(d);
             Ok(())
         },
-        // [0x03, _, _, b] => {
-        //     //println!("Thumb position: {:x?}", b);
-        //     Ok(())
-        // }
         _ => Ok(())
     }
 }

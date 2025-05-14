@@ -42,8 +42,8 @@ pub fn stop_acceleration(/* current_acc_state: Arc<AtomicBool> */) /* -> Result<
 }
 
 pub fn steer(degrees: u8) /* -> Result<(), Box<dyn Error>> */ {
-    let mut servo_pin = Pwm::with_period(
-        Channel::Pwm0, 
+    let servo_pin = Pwm::with_period(
+        SERVO_GPIO, 
         Duration::from_millis(PERIOD_MS), 
         Duration::from_micros(PULSE_MAX_US), 
         Polarity::Normal, 

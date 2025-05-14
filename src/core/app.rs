@@ -60,6 +60,8 @@ pub fn prepare_application(
                                     println!("Notifying with value {:x?}", &*value);
                                     if let Err(err) = notifier.notify(value.to_vec()).await {
                                         // Potential disconnection handler
+                                        // But it works only when notification stops manually
+                                        // On Bluetooth disconnect (it stops notifying, but doesn't throw error)
                                         on_disconnect(/* current_acc */);
                                         println!("Notification error: {}", &err);
                                         break;
