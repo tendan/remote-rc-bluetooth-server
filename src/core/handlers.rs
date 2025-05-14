@@ -12,6 +12,8 @@ use tokio::{
 use core::error::Error;
 use log::{error, info};
 
+use crate::config::spec::MAX_DEGREE;
+
 use super::hardware::{accelerate, stop_acceleration, steer};
 // use crate::core::commands::send_dummy_command;
 
@@ -104,7 +106,7 @@ fn accel_handle(id: u8) {
 }
 
 fn steering_handle(degrees: u8) {
-    if degrees > 180 {
+    if degrees > MAX_DEGREE {
         error!("Invalid degree value");
         return
     }
