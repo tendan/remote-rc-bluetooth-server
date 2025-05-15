@@ -19,7 +19,7 @@ use crate::config::uuid::{
     CONTROL_SYSTEM_CHARACTERISTIC_UUID,
     SERVICE_UUID
 };
-use super::{commands::{control_command, receive_dummy_command, send_dummy_command}, handlers::on_disconnect};
+use super::{commands::{control_command, receive_dummy_command, send_dummy_command}, control::on_disconnect};
 
 // TODO: Refactor it into macro
 pub fn prepare_application(

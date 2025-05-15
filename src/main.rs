@@ -1,9 +1,10 @@
 mod config;
 mod core;
-use core::{advertise::create_advertisement, app::prepare_application};
+use core::{adapter::event_listener, advertise::create_advertisement, app::prepare_application};
+use std::sync::Arc;
 //use futures::pin_mut;
 use bluer::gatt::local::characteristic_control;
-use log::info;
+use log::{error, info};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
 
@@ -31,7 +32,16 @@ async fn main() -> bluer::Result<()> {
 
     let app_handle = adapter.serve_gatt_application(app).await?;
 
+    let adapter_clone = Arc::new(adapter).clone();
+    tokio::spawn(async move {
+        if let Err(e) = event_listener(adapter_clone).await {
+            error!("Error occured in event listener: {}", e);
+        }
+    });
+
     info!("Application service ready. Press enter to quit.");
+
+    // TODO: External way to stop the application (maybe with machine shutdown)
     let stdin = BufReader::new(tokio::io::stdin());
     let mut lines = stdin.lines();
     let _ = lines.next_line().await;
