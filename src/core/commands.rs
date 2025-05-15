@@ -4,7 +4,7 @@ use futures::FutureExt;
 use log::error;
 use tokio::sync::Mutex;
 
-use crate::core::handlers::{parse_command, CommandHandleError};
+use crate::core::control::{parse_command, CommandHandleError};
 
 
 pub fn send_dummy_command(previous_value: Arc<Mutex<Vec<u8>>>) -> CharacteristicReadFun {
