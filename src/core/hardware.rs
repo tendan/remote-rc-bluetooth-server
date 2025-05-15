@@ -10,7 +10,7 @@ pub fn accelerate(/* current_acc_state: Arc<AtomicBool> */) -> Result<(), Box<dy
     //current_acc_state.clone().store(true, Ordering::SeqCst);
     accelerator_pin.set_high();
 
-    //Ok(())
+    Ok(())
 }
 
 pub fn stop_acceleration(/* current_acc_state: Arc<AtomicBool> */) -> Result<(), Box<dyn Error>> {
@@ -20,7 +20,7 @@ pub fn stop_acceleration(/* current_acc_state: Arc<AtomicBool> */) -> Result<(),
     info!("Stopping the vehicle");
     accelerator_pin.set_low();
 
-    //Ok(())
+    Ok(())
 }
 
 pub fn steer(degrees: u8) -> Result<(), Box<dyn Error>> {
@@ -37,5 +37,5 @@ pub fn steer(degrees: u8) -> Result<(), Box<dyn Error>> {
     info!("Set servo to {} degrees", degrees);
     servo_pin.set_pulse_width(Duration::from_micros(pulse))?;
 
-    //Ok(())
+    Ok(())
 }
