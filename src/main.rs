@@ -1,6 +1,6 @@
 mod config;
 mod core;
-use core::{adapter::event_listener, advertise::create_advertisement, app::prepare_application};
+use core::{adapter::monitor_disconnects, advertise::create_advertisement, app::prepare_application};
 use std::sync::Arc;
 //use futures::pin_mut;
 use bluer::gatt::local::characteristic_control;
@@ -31,11 +31,10 @@ async fn main() -> bluer::Result<()> {
     let app = prepare_application(dummy_char_handle, controls_char_handle);
 
     let app_handle = adapter.serve_gatt_application(app).await?;
-
-    let adapter_clone = Arc::new(adapter).clone();
+    
     tokio::spawn(async move {
-        if let Err(e) = event_listener(adapter_clone).await {
-            error!("Error occured in event listener: {}", e);
+        if let Err(e) = monitor_disconnects().await {
+            error!("Error occured in disconnects monitor: {}", e);
         }
     });
 
