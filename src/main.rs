@@ -31,7 +31,9 @@ async fn main() -> bluer::Result<()> {
     let app = prepare_application(dummy_char_handle, controls_char_handle);
 
     let app_handle = adapter.serve_gatt_application(app).await?;
-    
+
+
+    // Detects disconnect on Bluetooth adapter level
     tokio::spawn(async move {
         if let Err(e) = monitor_disconnects().await {
             error!("Error occured in disconnects monitor: {}", e);
