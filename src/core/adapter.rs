@@ -13,7 +13,7 @@ use futures::{Stream, StreamExt};
 
 pub async fn event_listener(adapter: Arc<Adapter>) -> bluer::Result<()> {
     let mut events = adapter.events().await?;
-
+    info!("Event listener instantiated");
     while let Some(evt) = events.next().await {
         match evt {
             AdapterEvent::DeviceAdded(addr) => info!("New device: {}", addr),
